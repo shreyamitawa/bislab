@@ -1,0 +1,190 @@
+#PARTICLE SWARM OPTIMIZATION
+
+import numpy as np
+
+# Rastrigin function: A benchmark function for optimization problems
+def rastrigin(x):
+    A = 10
+    # Calculate the Rastrigin function value based on the input vector x
+    return A * len(x) + sum(x_i**2 - A * np.cos(2 * np.pi * x_i) for x_i in x)
+
+# Particle Swarm Optimization class
+class ParticleSwarmOptimizer:
+    def __init__(self, func, n_particles, n_dimensions, n_iterations, inertia_weight=0.7, cognitive_coeff=1.5, social_coeff=1.5, bounds=(-5.12, 5.12)):
+        self.func = func  # The function to optimize
+        self.n_particles = n_particles  # Number of particles in the swarm
+        self.n_dimensions = n_dimensions  # Dimensions of the search space
+        self.n_iterations = n_iterations  # Number of iterations for the optimization
+        self.lower_bound, self.upper_bound = bounds  # Bounds for the search space
+
+        # Initialize particle positions randomly within the specified bounds
+        self.positions = np.random.uniform(self.lower_bound, self.upper_bound, (n_particles, n_dimensions))
+        # Initialize particle velocities randomly
+        self.velocities = np.random.uniform(-1, 1, (n_particles, n_dimensions))
+        # Personal best positions and scores for each particle
+        self.pbest_positions = np.copy(self.positions)
+        self.pbest_scores = np.array([func(p) for p in self.positions])  # Evaluate initial fitness
+        # Global best position and score among all particles
+        self.gbest_position = self.pbest_positions[np.argmin(self.pbest_scores)]
+        self.gbest_score = np.min(self.pbest_scores)
+
+    def optimize(self):
+        # Main loop for the optimization process
+        for _ in range(self.n_iterations):
+            for i in range(self.n_particles):
+                # Evaluate the fitness of the current position
+                fitness = self.func(self.positions[i])
+                # Update personal best if the current fitness is better
+                if fitness < self.pbest_scores[i]:
+                    self.pbest_scores[i] = fitness
+                    self.pbest_positions[i] = self.positions[i]
+                # Update global best if the current fitness is better
+                if fitness < self.gbest_score:
+                    self.gbest_score = fitness
+                    self.gbest_position = self.positions[i]
+
+            # Generate random coefficients for cognitive and social components
+            r1, r2 = np.random.rand(self.n_dimensions), np.random.rand(self.n_dimensions)
+            # Update velocities based on inertia, personal best, and global best
+            self.velocities = (self.velocities * 0.7 +  # Inertia weight
+                               1.5 * r1 * (self.pbest_positions - self.positions) +  # Cognitive component
+                               1.5 * r2 * (self.gbest_position - self.positions))  # Social component
+            # Update positions based on new velocities and clip to stay within bounds
+            self.positions = np.clip(self.positions + self.velocities, self.lower_bound, self.upper_bound)
+
+            # Print the best fitness found so far in this iteration
+            print(f"Best Fitness: {self.gbest_score}")
+
+        # Return the best position and score found after all iterations
+        return self.gbest_position, self.gbest_score
+
+# Create and run the optimizer
+pso = ParticleSwarmOptimizer(func=rastrigin, n_particles=30, n_dimensions=2, n_iterations=100)
+best_position, best_score = pso.optimize()
+
+# Print the best position and corresponding fitness score found
+print("\nBest Position Found:", best_position)
+print("Best Fitness Score:", best_score)
+
+output:
+
+#PARTICLE SWARM OPTIMIZATION
+
+import numpy as np
+
+# Rastrigin function: A benchmark function for optimization problems
+def rastrigin(x):
+    A = 10
+    # Calculate the Rastrigin function value based on the input vector x
+    return A * len(x) + sum(x_i**2 - A * np.cos(2 * np.pi * x_i) for x_i in x)
+
+…# Create and run the optimizer
+pso = ParticleSwarmOptimizer(func=rastrigin, n_particles=30, n_dimensions=2, n_iterations=100)
+best_position, best_score = pso.optimize()
+
+# Print the best position and corresponding fitness score found
+print("\nBest Position Found:", best_position)
+print("Best Fitness Score:", best_score)
+Best Fitness: 7.523349690449162
+Best Fitness: 5.479012944526062
+Best Fitness: 5.479012944526062
+Best Fitness: 5.479012944526062
+Best Fitness: 5.479012944526062
+Best Fitness: 5.479012944526062
+Best Fitness: 5.479012944526062
+Best Fitness: 5.479012944526062
+Best Fitness: 5.35158483420342
+Best Fitness: 4.23336222695108
+Best Fitness: 2.3059731550465656
+Best Fitness: 2.3059731550465656
+Best Fitness: 2.3059731550465656
+Best Fitness: 2.3059731550465656
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 2.2923779383497873
+Best Fitness: 1.4393114014934305
+Best Fitness: 1.4393114014934305
+Best Fitness: 1.3002025319518147
+Best Fitness: 1.3002025319518147
+Best Fitness: 1.3002025319518147
+Best Fitness: 1.3002025319518147
+Best Fitness: 1.3002025319518147
+Best Fitness: 1.0835125847765568
+Best Fitness: 1.0835125847765568
+Best Fitness: 1.0835125847765568
+Best Fitness: 1.0835125847765568
+Best Fitness: 1.008200843350501
+Best Fitness: 1.008200843350501
+Best Fitness: 1.008200843350501
+Best Fitness: 1.008200843350501
+Best Fitness: 1.008200843350501
+Best Fitness: 1.008200843350501
+Best Fitness: 1.008200843350501
+Best Fitness: 1.0025855472109555
+Best Fitness: 1.0025855472109555
+Best Fitness: 0.9976684909169933
+Best Fitness: 0.46388514044413043
+Best Fitness: 0.46388514044413043
+Best Fitness: 0.46388514044413043
+Best Fitness: 0.46388514044413043
+Best Fitness: 0.46388514044413043
+Best Fitness: 0.46388514044413043
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.05005828072324192
+Best Fitness: 0.004274209531825335
+Best Fitness: 0.004274209531825335
+Best Fitness: 0.004274209531825335
+Best Fitness: 0.004274209531825335
+Best Fitness: 0.0019345683657263635
+Best Fitness: 0.0019345683657263635
+Best Fitness: 0.0019345683657263635
+Best Fitness: 0.0019345683657263635
+Best Fitness: 0.0007436890342162883
+Best Fitness: 0.00042484148907107055
+Best Fitness: 0.00042484148907107055
+Best Fitness: 0.00019896058490331825
+Best Fitness: 0.00019896058490331825
+Best Fitness: 0.00019896058490331825
+Best Fitness: 0.00019896058490331825
+Best Fitness: 0.00019896058490331825
+Best Fitness: 0.00019896058490331825
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 9.185587018123442e-06
+Best Fitness: 8.17354336390963e-06
+Best Fitness: 8.17354336390963e-06
+Best Fitness: 3.993851240835511e-06
+Best Fitness: 3.993851240835511e-06
+Best Fitness: 3.993851240835511e-06
+Best Fitness: 3.993851240835511e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.6462023069152565e-06
+Best Fitness: 1.5764355048020207e-06
+
+Best Position Found: [3.76308963e-05 8.08082678e-05]
+Best Fitness Score: 1.5764355048020207e-06
