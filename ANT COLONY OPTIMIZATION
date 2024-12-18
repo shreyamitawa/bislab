@@ -1,0 +1,283 @@
+#ANT COLONY OPTIMIZATION
+
+import random
+import numpy as np
+
+# Distance calculation (Euclidean distance)
+def euclidean_distance(city1, city2):
+    return np.sqrt((city1[0] - city2[0])**2 + (city1[1] - city2[1])**2)
+
+# Ant Colony Optimization Algorithm
+class ACO:
+    def __init__(self, cities, num_ants=10, num_iterations=100, alpha=1.0, beta=2.0, rho=0.5, Q=100):
+        self.cities = cities
+        self.num_ants = num_ants
+        self.num_iterations = num_iterations
+        self.alpha = alpha        # Importance of pheromone
+        self.beta = beta          # Importance of heuristic information (distance)
+        self.rho = rho            # Pheromone evaporation rate
+        self.Q = Q                # Total pheromone deposited per ant per tour
+        self.num_cities = len(cities)
+
+        # Initialize pheromone matrix (for each pair of cities)
+        self.pheromone = np.ones((self.num_cities, self.num_cities)) / self.num_cities
+        self.distances = np.zeros((self.num_cities, self.num_cities))
+
+        # Compute distance matrix
+        for i in range(self.num_cities):
+            for j in range(i + 1, self.num_cities):
+                self.distances[i][j] = self.distances[j][i] = euclidean_distance(cities[i], cities[j])
+
+    def _choose_next_city(self, ant, visited):
+        # Calculate the probability of moving to each city
+        current_city = ant[-1]
+        probabilities = []
+
+        for i in range(self.num_cities):
+            if i not in visited:
+                pheromone = self.pheromone[current_city][i] ** self.alpha
+                heuristic = (1.0 / self.distances[current_city][i]) ** self.beta
+                probabilities.append(pheromone * heuristic)
+            else:
+                probabilities.append(0)
+
+        # Normalize probabilities
+        total = sum(probabilities)
+        if total == 0:  # In case there's no valid path (shouldn't happen with good settings)
+            return random.choice([i for i in range(self.num_cities) if i not in visited])
+
+        probabilities = [prob / total for prob in probabilities]
+
+        # Choose next city based on probabilities
+        next_city = random.choices(range(self.num_cities), probabilities)[0]
+        return next_city
+
+    def _construct_solution(self):
+        # Each ant starts at a random city
+        ant = [random.randint(0, self.num_cities - 1)]
+        visited = set(ant)
+
+        while len(ant) < self.num_cities:
+            next_city = self._choose_next_city(ant, visited)
+            ant.append(next_city)
+            visited.add(next_city)
+
+        # Return to the starting city
+        ant.append(ant[0])
+
+        return ant
+
+    def _evaluate_solution(self, solution):
+        # Calculate the total distance of the tour
+        total_distance = 0
+        for i in range(len(solution) - 1):
+            total_distance += self.distances[solution[i]][solution[i + 1]]
+        return total_distance
+
+    def _update_pheromone(self, all_solutions):
+        # Initialize pheromone update matrix
+        pheromone_delta = np.zeros((self.num_cities, self.num_cities))
+
+        # For each solution, deposit pheromone
+        for solution in all_solutions:
+            tour_length = self._evaluate_solution(solution)
+            for i in range(len(solution) - 1):
+                pheromone_delta[solution[i]][solution[i + 1]] += self.Q / tour_length
+
+        # Evaporate pheromone
+        self.pheromone = (1 - self.rho) * self.pheromone + pheromone_delta
+
+    def solve(self):
+        best_solution = None
+        best_distance = float('inf')
+
+        for iteration in range(self.num_iterations):
+            all_solutions = []
+
+            # Each ant constructs a solution
+            for ant in range(self.num_ants):
+                solution = self._construct_solution()
+                all_solutions.append(solution)
+                tour_length = self._evaluate_solution(solution)
+
+                # Update best solution if necessary
+                if tour_length < best_distance:
+                    best_solution = solution
+                    best_distance = tour_length
+
+            # Update pheromones based on solutions found
+            self._update_pheromone(all_solutions)
+
+            print(f"Iteration {iteration + 1}, Best Distance: {best_distance}")
+
+        return best_solution, best_distance
+
+
+# Function to take user input for cities
+def get_user_input():
+    num_cities = int(input("Enter the number of cities: "))
+    cities = []
+
+    print("Enter the coordinates of each city (x, y):")
+    for i in range(num_cities):
+        x, y = map(float, input(f"City {i+1}: ").split())
+        cities.append((x, y))
+
+    return cities
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Take user input for cities
+    cities = get_user_input()
+
+    # Take user input for ACO parameters
+    num_ants = int(input("Enter the number of ants: "))
+    num_iterations = int(input("Enter the number of iterations: "))
+    alpha = float(input("Enter the value of alpha (pheromone importance): "))
+    beta = float(input("Enter the value of beta (distance importance): "))
+    rho = float(input("Enter the value of rho (pheromone evaporation rate): "))
+    Q = float(input("Enter the value of Q (pheromone deposit per ant): "))
+
+    # Create an instance of ACO and solve the problem
+    aco = ACO(cities, num_ants, num_iterations, alpha, beta, rho, Q)
+    best_solution, best_distance = aco.solve()
+
+    print(f"\nBest Solution (Tour): {best_solution}")
+    print(f"Best Distance: {best_distance}")
+output:
+
+#ANT COLONY OPTIMIZATION
+
+import random
+import numpy as np
+
+# Distance calculation (Euclidean distance)
+def euclidean_distance(city1, city2):
+    return np.sqrt((city1[0] - city2[0])**2 + (city1[1] - city2[1])**2)
+
+# Ant Colony Optimization Algorithm
+…
+    # Create an instance of ACO and solve the problem
+    aco = ACO(cities, num_ants, num_iterations, alpha, beta, rho, Q)
+    best_solution, best_distance = aco.solve()
+
+    print(f"\nBest Solution (Tour): {best_solution}")
+    print(f"Best Distance: {best_distance}")
+
+Enter the number of cities: 5
+Enter the coordinates of each city (x, y):
+City 1: 0 0
+City 2: 1 3
+City 3: 4 3
+City 4: 6 1
+City 5: 3 0
+Enter the number of ants: 10
+Enter the number of iterations: 100
+Enter the value of alpha (pheromone importance): 1.0
+Enter the value of beta (distance importance): 2.0
+Enter the value of rho (pheromone evaporation rate): 0.5
+Enter the value of Q (pheromone deposit per ant): 100
+Iteration 1, Best Distance: 15.15298244508295
+Iteration 2, Best Distance: 15.15298244508295
+Iteration 3, Best Distance: 15.15298244508295
+Iteration 4, Best Distance: 15.15298244508295
+Iteration 5, Best Distance: 15.15298244508295
+Iteration 6, Best Distance: 15.15298244508295
+Iteration 7, Best Distance: 15.15298244508295
+Iteration 8, Best Distance: 15.15298244508295
+Iteration 9, Best Distance: 15.15298244508295
+Iteration 10, Best Distance: 15.15298244508295
+Iteration 11, Best Distance: 15.15298244508295
+Iteration 12, Best Distance: 15.15298244508295
+Iteration 13, Best Distance: 15.15298244508295
+Iteration 14, Best Distance: 15.15298244508295
+Iteration 15, Best Distance: 15.15298244508295
+Iteration 16, Best Distance: 15.15298244508295
+Iteration 17, Best Distance: 15.15298244508295
+Iteration 18, Best Distance: 15.15298244508295
+Iteration 19, Best Distance: 15.15298244508295
+Iteration 20, Best Distance: 15.15298244508295
+Iteration 21, Best Distance: 15.15298244508295
+Iteration 22, Best Distance: 15.15298244508295
+Iteration 23, Best Distance: 15.15298244508295
+Iteration 24, Best Distance: 15.15298244508295
+Iteration 25, Best Distance: 15.15298244508295
+Iteration 26, Best Distance: 15.15298244508295
+Iteration 27, Best Distance: 15.15298244508295
+Iteration 28, Best Distance: 15.15298244508295
+Iteration 29, Best Distance: 15.15298244508295
+Iteration 30, Best Distance: 15.15298244508295
+Iteration 31, Best Distance: 15.15298244508295
+Iteration 32, Best Distance: 15.15298244508295
+Iteration 33, Best Distance: 15.15298244508295
+Iteration 34, Best Distance: 15.15298244508295
+Iteration 35, Best Distance: 15.15298244508295
+Iteration 36, Best Distance: 15.15298244508295
+Iteration 37, Best Distance: 15.15298244508295
+Iteration 38, Best Distance: 15.15298244508295
+Iteration 39, Best Distance: 15.15298244508295
+Iteration 40, Best Distance: 15.15298244508295
+Iteration 41, Best Distance: 15.15298244508295
+Iteration 42, Best Distance: 15.15298244508295
+Iteration 43, Best Distance: 15.15298244508295
+Iteration 44, Best Distance: 15.15298244508295
+Iteration 45, Best Distance: 15.15298244508295
+Iteration 46, Best Distance: 15.15298244508295
+Iteration 47, Best Distance: 15.15298244508295
+Iteration 48, Best Distance: 15.15298244508295
+Iteration 49, Best Distance: 15.15298244508295
+Iteration 50, Best Distance: 15.15298244508295
+Iteration 51, Best Distance: 15.15298244508295
+Iteration 52, Best Distance: 15.15298244508295
+Iteration 53, Best Distance: 15.15298244508295
+Iteration 54, Best Distance: 15.15298244508295
+Iteration 55, Best Distance: 15.15298244508295
+Iteration 56, Best Distance: 15.15298244508295
+Iteration 57, Best Distance: 15.15298244508295
+Iteration 58, Best Distance: 15.15298244508295
+Iteration 59, Best Distance: 15.15298244508295
+Iteration 60, Best Distance: 15.15298244508295
+Iteration 61, Best Distance: 15.15298244508295
+Iteration 62, Best Distance: 15.15298244508295
+Iteration 63, Best Distance: 15.15298244508295
+Iteration 64, Best Distance: 15.15298244508295
+Iteration 65, Best Distance: 15.15298244508295
+Iteration 66, Best Distance: 15.15298244508295
+Iteration 67, Best Distance: 15.15298244508295
+Iteration 68, Best Distance: 15.15298244508295
+Iteration 69, Best Distance: 15.15298244508295
+Iteration 70, Best Distance: 15.15298244508295
+Iteration 71, Best Distance: 15.15298244508295
+Iteration 72, Best Distance: 15.15298244508295
+Iteration 73, Best Distance: 15.15298244508295
+Iteration 74, Best Distance: 15.15298244508295
+Iteration 75, Best Distance: 15.15298244508295
+Iteration 76, Best Distance: 15.15298244508295
+Iteration 77, Best Distance: 15.15298244508295
+Iteration 78, Best Distance: 15.15298244508295
+Iteration 79, Best Distance: 15.15298244508295
+Iteration 80, Best Distance: 15.15298244508295
+Iteration 81, Best Distance: 15.15298244508295
+Iteration 82, Best Distance: 15.15298244508295
+Iteration 83, Best Distance: 15.15298244508295
+Iteration 84, Best Distance: 15.15298244508295
+Iteration 85, Best Distance: 15.15298244508295
+Iteration 86, Best Distance: 15.15298244508295
+Iteration 87, Best Distance: 15.15298244508295
+Iteration 88, Best Distance: 15.15298244508295
+Iteration 89, Best Distance: 15.15298244508295
+Iteration 90, Best Distance: 15.15298244508295
+Iteration 91, Best Distance: 15.15298244508295
+Iteration 92, Best Distance: 15.15298244508295
+Iteration 93, Best Distance: 15.15298244508295
+Iteration 94, Best Distance: 15.15298244508295
+Iteration 95, Best Distance: 15.15298244508295
+Iteration 96, Best Distance: 15.15298244508295
+Iteration 97, Best Distance: 15.15298244508295
+Iteration 98, Best Distance: 15.15298244508295
+Iteration 99, Best Distance: 15.15298244508295
+Iteration 100, Best Distance: 15.15298244508295
+
+Best Solution (Tour): [1, 0, 4, 3, 2, 1]
+Best Distance: 15.15298244508295
