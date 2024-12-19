@@ -1,0 +1,87 @@
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from scipy import ndimage
+from skimage import img_as_float, data
+from sklearn.metrics import mean_squared_error
+import random
+
+# Load and preprocess the image
+def load_image():
+    # Use a sample image from skimage's data module
+    image = img_as_float(data.camera())  # Example grayscale image
+    return image
+
+# Objective function to measure image quality
+def objective_function(enhanced_image, reference_image):
+    return -mean_squared_error(enhanced_image, reference_image)  # Higher score for better quality
+
+# Cuckoo Search Algorithm
+def cuckoo_search(image, reference_image, num_nests=15, max_generations=100):
+    alpha = 1  # Step size scaling factor
+
+    # Initialize nests with random parameters (e.g., filter strength and contrast adjustment)
+    nests = [np.random.rand(2) for _ in range(num_nests)]
+    best_nest = nests[0]
+    best_score = float('-inf')
+
+    def enhance_image(image, params):
+        filter_strength, contrast_adjust = params
+        enhanced = ndimage.gaussian_filter(image, sigma=filter_strength)
+        enhanced = np.clip(enhanced * contrast_adjust, 0, 1)
+        return enhanced
+
+    for generation in range(max_generations):
+        new_nests = []
+        for nest in nests:
+            step = alpha * (np.random.rand(2) - 0.5)
+            new_nest = nest + step
+            new_nest = np.clip(new_nest, 0, 1)  # Keep parameters within bounds
+            enhanced_image = enhance_image(image, new_nest)
+            score = objective_function(enhanced_image, reference_image)
+            if score > best_score:
+                best_score = score
+                best_nest = new_nest
+            new_nests.append(new_nest)
+
+        # Replace some nests with new random solutions (cuckoo behavior)
+        random_nests = [np.random.rand(2) for _ in range(num_nests // 5)]
+        nests = new_nests[:-len(random_nests)] + random_nests
+
+    return best_nest, best_score
+
+# Main execution
+if __name__ == "__main__":
+    # Load a random image and use it as both target and reference for demonstration
+    image = load_image()
+    reference_image = load_image()
+
+    # Run Cuckoo Search to optimize parameters
+    best_params, best_score = cuckoo_search(image, reference_image)
+    print(f"Best Parameters: {best_params}, Best Score: {best_score}")
+
+    # Apply the best parameters to enhance the image
+    def enhance_image(image, params):
+        filter_strength, contrast_adjust = params
+        enhanced = ndimage.gaussian_filter(image, sigma=filter_strength)
+        enhanced = np.clip(enhanced * contrast_adjust, 0, 1)
+        return enhanced
+
+    enhanced_image = enhance_image(image, best_params)
+
+    # Display results
+    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+    ax[0].imshow(image, cmap='gray')
+    ax[0].set_title("Original Image")
+    ax[0].axis('off')
+
+    ax[1].imshow(reference_image, cmap='gray')
+    ax[1].set_title("Reference Image")
+    ax[1].axis('off')
+
+    ax[2].imshow(enhanced_image, cmap='gray')
+    ax[2].set_title("Enhanced Image")
+    ax[2].axis('off')
+
+    plt.tight_layout()
+    plt.show()
